@@ -1,0 +1,55 @@
+import numpy as np
+import pandas as pd
+import seaborn as sns
+from google.colab import drive
+drive.mount("/content/drive")
+df_1 = pd.read_csv("/content/drive/My Drive/Movies_dataset/movies_metadata.csv")
+df_2 = pd.read_csv("/content/drive/My Drive/Movies_dataset/ratings.csv")
+df_2.head()
+x=int(input("Enter Movie id corresponding to the movie name: "))
+df_2['newmovie_Id']=df_2['movieId']
+df_2
+df_2.groupby('movieId')['rating'].mean().sort_values(ascending=False).head()
+df_2.groupby('movieId')['rating'].count().sort_values(ascending=False).head()
+ratings = pd.DataFrame(df_2.groupby('movieId')['rating'].mean())
+df_3 = df_2.loc[0:2000000]
+ratings.head()
+ratings.shape
+ratings['num of ratings'] = pd.DataFrame(df_3.groupby('movieId')['rating'].count())
+ratings.head()
+ratings.shape
+ratings['num of ratings'].hist(bins=50)
+ratings['rating'].hist(bins=50)
+sns.jointplot(x='rating',y='num of ratings',data=ratings,alpha=0.5)
+moviemat = df_3.pivot_table(index='userId',columns='newmovie_Id',values='rating')
+moviemat.loc[1]
+moviemat.head()
+moviemat.shape
+ratings.sort_values(['num of ratings'],ascending=False).head(10)
+movie356_id_rate = moviemat[356]
+movie318_id_rate = moviemat[318]
+movie356_id_rate.isnull().sum()
+similar_movie1 = moviemat.corrwith(movie356_id_rate)
+similar_movie1.shape
+similar_movie2 = moviemat.corrwith(movie318_id_rate)
+corr_movie1 = pd.DataFrame(similar_movie1,columns=['Correlation'])
+corr_movie1.dropna(inplace=True)
+corr_movie2 = pd.DataFrame(similar_movie2,columns=['Correlation'])
+corr_movie2.dropna(inplace=True)
+corr_movie1.shape
+corr_movie1.sort_values('Correlation',ascending=False).head(10)
+corr_movie1 = corr_movie1.join(ratings['num of ratings'])
+corr_movie1.head()
+corr_movie1[corr_movie1['num of ratings']>100].sort_values('Correlation',ascending=False).head(10)
+corr_movie2 = corr_movie2.join(ratings['num of ratings'])
+corr_movie2[corr_movie2['num of ratings']>100].sort_values('Correlation',ascending=False).head(10)
+for i in range(1,176271):
+  if i!=x:
+    break
+  if i==x:
+    movie_id_rate = moviemat[i]
+    similar_movie = moviemat.corrwith(movie_id_rate)
+    corr_movie = pd.DataFrame(similar_movie,columns=['Correlation'])
+    corr_movie.dropna(inplace=True)
+    corr_movie = corr_movie.join(ratings['num of ratings'])
+    print(corr_movie[corr_movie['num of ratings']>100].sort_values('Correlation',ascending=False).head(10))
